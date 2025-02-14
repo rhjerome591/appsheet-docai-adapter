@@ -7,7 +7,7 @@ Deployment and maintenance can be easily automated, with the minimal code provid
 
 To deploy, simply click on this button to deploy into a chosen GCP project:
 
-[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.png)](https://ssh.cloud.google.com/cloudshell/open?cloudshell_git_repo=https://github.com/rhjerome591/appsheet-docai-adapter&cloudshell_git_branch=main&cloudshell_workspace=.&cloudshell_tutorial=docs/tutorial.md)
+[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.png)](https://ssh.cloud.google.com/cloudshell/open?cloudshell_git_repo=https://rhjerome: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@github.com/rhjerome591/appsheet-docai-adapter&cloudshell_git_branch=main&cloudshell_workspace=.&cloudshell_tutorial=docs/tutorial.md)
 
 View a complete deployment and usage guide: [Using Google Cloud Document AI with AppSheet](https://www.googlecloudcommunity.com/gc/Tips-Tricks/Guide-Using-Google-Cloud-Document-AI-with-AppSheet/m-p/659636#M9007)
 
