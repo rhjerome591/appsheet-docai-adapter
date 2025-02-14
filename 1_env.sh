@@ -1,4 +1,4 @@
-export PROJECT=starlit-factor-450517-a5
+export PROJECT=aptiva-medical
 export PAT=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
 export REGION=us-east1
 export NAME=docai-service
