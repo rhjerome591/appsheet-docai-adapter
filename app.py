@@ -1,8 +1,6 @@
 import pprint
-import web
 import json
 import logging
-import urllib
 import requests
 import io
 import os
@@ -13,13 +11,15 @@ from firebase_admin import credentials
 from firebase_admin import firestore
 import google.auth
 
+from flask import Flask, request, jsonify
+
 from apputils import getFile, callDocAI
 
+# Flask App Initialization
+app = Flask(__name__)
 topic = "documents"
 
-urls = ("/{topic}(.*)".format(topic=topic), "datahandler", "/", "openapispec")
-app = web.application(urls, globals())
-
+# Initialize Firebase Admin SDK
 if not firebase_admin._apps:
     cred = credentials.ApplicationDefault()
     firebase_admin.initialize_app(
@@ -29,84 +29,87 @@ if not firebase_admin._apps:
         },
     )
 
-
-class datahandler:
-    db = firestore.client()
-
-    # Returns all of the notes
-    def GET(self, id):
-        new_result = {}
-
-        if len(id) == 0:
-            forms_ref = self.db.collection(topic)
-            forms = forms_ref.stream()
-            new_result = {topic: []}
-
-            for form in forms:
-                new_result[topic].append(form.to_dict())
-        else:
-            doc_ref = self.db.collection(topic).document(id[1:])
-            doc = doc_ref.get()
-            new_result = doc.to_dict()
-
-        if new_result:
-            web.header("Content-Type", "application/json")
-            return json.dumps(new_result)
-        else:
-            return web.notfound("Not found")
-
-    # Posts a new object to be stored
-    def POST(self, name):
-        data = json.loads(web.data())
-        documentPath = "", ""
-        if "file" in data:
-            documentPath = data["file"]
-
-        logging.error("Calling DocAI with file path: " + documentPath)
-
-        result = callDocAI(documentPath)
-        data["text"] = result["text"]
-        data["formFields"] = result["formFields"]
-        data["image"] = result["image"]
-        data["totalFields"] = result["totalFields"]
-        data["filledFields"] = result["filledFields"]
-        data["entities"] = result["entities"]
-
-        self.db.collection(topic).document(data["id"]).set(data)
-
-        web.header("Content-Type", "application/json")
-        return json.dumps(data)
-
-    # Puts an object to be updated
-    def PUT(self, name):
-        data = json.loads(web.data())
-
-        logging.info(json.dumps(data))
-
-        self.db.collection(topic).document(data["id"]).set(data)
-
-        pprint.pprint(data)
-
-        web.header("Content-Type", "application/json")
-        return json.dumps(data)
-
-    # Deletes an object
-    def DELETE(self, id):
-        if id:
-            self.db.collection(topic).document(id[1:]).delete()
-
-        return "200 OK"
+db = firestore.client()
 
 
-# Returns the OpenAPI spec, filled in with the current server
-class openapispec:
-    # Returns the OpenAPI spec, filled in with the current server
-    def GET(self):
-        f = open("apispec.yaml", "r")
-        spec = f.read()
-        spec = spec.replace("SERVER_URL", web.ctx.home.replace("http://", "https://"))
-        web.header("Content-Type", "text/plain;charset=UTF-8")
-        return spec
+# Routes
+@app.route(f"/{topic}", methods=["GET"])
+@app.route(f"/{topic}/<string:doc_id>", methods=["GET"])
+def get_documents(doc_id=None):
+    """Returns all documents or a specific document by ID."""
+    new_result = {}
+
+    if doc_id is None:
+        forms_ref = db.collection(topic)
+        forms = forms_ref.stream()
+        new_result = {topic: [form.to_dict() for form in forms]}
+    else:
+        doc_ref = db.collection(topic).document(doc_id)
+        doc = doc_ref.get()
+        new_result = doc.to_dict()
+
+    if new_result:
+        return jsonify(new_result)
+    else:
+        return jsonify({"error": "Not found"}), 404
+
+
+@app.route(f"/{topic}", methods=["POST"])
+def post_document():
+    """Posts a new object to be stored."""
+    data = request.get_json()
+    documentPath = data.get("file", "")
+
+    logging.error("Calling DocAI with file path: " + documentPath)
+
+    result = callDocAI(documentPath)
+    data.update(
+        {
+            "text": result["text"],
+            "formFields": result["formFields"],
+            "image": result["image"],
+            "totalFields": result["totalFields"],
+            "filledFields": result["filledFields"],
+            "entities": result["entities"],
+        }
+    )
+
+    db.collection(topic).document(data["id"]).set(data)
+    return jsonify(data)
+
+
+@app.route(f"/{topic}", methods=["PUT"])
+def put_document():
+    """Updates an existing object."""
+    data = request.get_json()
+    logging.info(json.dumps(data))
+
+    db.collection(topic).document(data["id"]).set(data)
+
+    pprint.pprint(data)
+    return jsonify(data)
+
+
+@app.route(f"/{topic}/<string:doc_id>", methods=["DELETE"])
+def delete_document(doc_id):
+    """Deletes an object by ID."""
+    if doc_id:
+        db.collection(topic).document(doc_id).delete()
+
+    return jsonify({"message": "Deleted successfully"}), 200
+
+
+@app.route("/", methods=["GET"])
+def get_openapi_spec():
+    """Returns the OpenAPI spec, replacing the server URL dynamically."""
+    try:
+        with open("apispec.yaml", "r") as f:
+            spec = f.read()
+            server_url = request.host_url.replace("http://", "https://")
+            spec = spec.replace("SERVER_URL", server_url)
+        return spec, 200, {"Content-Type": "text/plain;charset=UTF-8"}
+    except FileNotFoundError:
+        return jsonify({"error": "API spec file not found"}), 404
 
 
 if __name__ == "__main__":

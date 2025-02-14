@@ -12,7 +12,7 @@ gcloud artifacts repositories create docker-registry --repository-format=docker 
 --location="$REGION" --description="Docker registry"    
 
 # Create firebase db and give service account rights, if needed
-if [[ $(gcloud app describe 2>&1 || true) == *'ERROR'* ]]; then echo 'No app engine or firestore instances found, creating...' && gcloud app create --region=europe-west; fi
+if [[ $(gcloud app describe 2>&1 || true) == *'ERROR'* ]]; then echo 'No app engine or firestore instances found, creating...' && gcloud app create --region=us-east1; fi
 gcloud alpha firestore databases update --type=firestore-native
 PROJECTNUMBER=$(gcloud projects describe $PROJECT --format="value(projectNumber)")
 gcloud projects add-iam-policy-binding $PROJECT --member="serviceAccount:$PROJECTNUMBER-compute@developer.gserviceaccount.com" --role='roles/datastore.user'

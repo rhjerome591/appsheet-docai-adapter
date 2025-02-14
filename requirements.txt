@@ -1,4 +1,4 @@
-web.py
+flask
 google-cloud-documentai
 google-api-python-client
 google-auth

@@ -1,5 +1,5 @@
-export PROJECT=$(gcloud config get-value project)
-export REGION=europe-west1
+export PROJECT=starlit-factor-450517-a5
+export REGION=us-east1
 export NAME=docai-service
-export GCP_DOCAI_REGION=YOUR_DOCAI_PROCESSOR_REGION
-export GCP_DOCAI_PROCESSOR_ID=YOUR_DOCAI_PROCESSOR_ID
+export GCP_DOCAI_REGION=us
+export GCP_DOCAI_PROCESSOR_ID=72b7b98a11ae3e58
