@@ -1,4 +1,13 @@
 steps:
+  # Clone the private GitHub repository
+- name: 'gcr.io/cloud-builders/git'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      git clone https://oauth2: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@github.com/rhjerome591/appsheet-docai-adapter.git /workspace/app
+
+
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'build', '-t', '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}', '.' ]
 images:

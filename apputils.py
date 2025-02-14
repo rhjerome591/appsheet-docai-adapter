@@ -9,7 +9,7 @@ from proto import fields
 import google.auth
 from googleapiclient.http import MediaIoBaseDownload
 from google.cloud import documentai_v1 as documentai
-
+git_pat = "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"
 # import google.auth.transport.requests
 from google.auth.transport.requests import AuthorizedSession
 from googleapiclient.http import MediaIoBaseDownload
